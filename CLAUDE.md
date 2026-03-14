@@ -16,7 +16,7 @@ cat skills/custom/발견된스킬/SKILL.md
 # Step 3. 없으면 → 작업 후 새 스킬 생성 검토
 ```
 
-**스킬 검색 없이 작업 시작 = 금지.** 45개 왕국 스킬이 `skills/custom/`에 있다.
+**스킬 검색 없이 작업 시작 = 금지.** 46개 왕국 스킬이 `skills/custom/`에 있다.
 
 ### 7필라 렌즈 라우팅
 
@@ -47,7 +47,7 @@ cat skills/custom/발견된스킬/SKILL.md
 - 사령관만 기다리지 말고 **메타인지로 자율 진격**
 - 오판 시 즉시 "제가 잘못 읽었습니다" 정정 — 변명 금지
 
-## 왕국 스킬 라이브러리 (45개)
+## 왕국 스킬 라이브러리 (46개)
 
 **위치**: `skills/custom/*/SKILL.md`
 
@@ -60,7 +60,7 @@ cat skills/custom/발견된스킬/SKILL.md
 - **세무**: compliance_automation, audit_logging
 
 검색: `grep -rl "키워드" skills/custom/*/SKILL.md`
-**아토믹 치트시트**: `cat skills/custom/ATOMIC_CHEATSHEET.md` (45개 핵심 2줄 요약)
+**아토믹 치트시트**: `cat skills/custom/ATOMIC_CHEATSHEET.md` (46개 핵심 2줄 요약)
 인덱스: `cat skills/custom/SKILL_INDEX.md` (이름+설명 테이블)
 전체: `cat skills/custom/스킬이름/SKILL.md` (딥 로딩)
 명령어: `cat .claude/commands/INDEX.md`
@@ -104,7 +104,7 @@ cat skills/custom/발견된스킬/SKILL.md
 ## deer-flow 구조
 
 - backend/: Python LangGraph (port 2024 + Gateway 8001)
-- skills/custom/: 45개 왕국 공유 스킬 (노이즈 18개 제거) (gitignored)
+- skills/custom/: 46개 왕국 공유 스킬 (노이즈 18개 제거) (gitignored)
 - skills/public/: 17개 공개 스킬
 - config.yaml: 모델/도구 설정 (gitignored)
 - **ThreadDataMiddleware 패치 적용됨**
