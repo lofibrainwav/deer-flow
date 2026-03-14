@@ -44,6 +44,9 @@ cat skills/custom/발견된스킬/SKILL.md
 - **세무**: compliance_automation, audit_logging
 
 검색: `grep -rl "키워드" skills/custom/*/SKILL.md`
+인덱스: `cat skills/custom/SKILL_INDEX.md`
+명령어: `cat .claude/commands/INDEX.md`
+에이전트: `cat .claude/agents/INDEX.md`
 
 ## CLI 명령어 (33개)
 
