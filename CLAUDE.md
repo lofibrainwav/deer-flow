@@ -16,7 +16,7 @@ cat skills/custom/발견된스킬/SKILL.md
 # Step 3. 없으면 → 작업 후 새 스킬 생성 검토
 ```
 
-**스킬 검색 없이 작업 시작 = 금지.** 63개 왕국 스킬이 `skills/custom/`에 있다.
+**스킬 검색 없이 작업 시작 = 금지.** 45개 왕국 스킬이 `skills/custom/`에 있다.
 
 ## Rule #1: 지피지기
 
@@ -31,7 +31,7 @@ cat skills/custom/발견된스킬/SKILL.md
 - 사령관만 기다리지 말고 **메타인지로 자율 진격**
 - 오판 시 즉시 "제가 잘못 읽었습니다" 정정 — 변명 금지
 
-## 왕국 스킬 라이브러리 (63개)
+## 왕국 스킬 라이브러리 (45개)
 
 **위치**: `skills/custom/*/SKILL.md`
 
@@ -86,7 +86,7 @@ cat skills/custom/발견된스킬/SKILL.md
 ## deer-flow 구조
 
 - backend/: Python LangGraph (port 2024 + Gateway 8001)
-- skills/custom/: 63개 왕국 공유 스킬 (gitignored)
+- skills/custom/: 45개 왕국 공유 스킬 (노이즈 18개 제거) (gitignored)
 - skills/public/: 17개 공개 스킬
 - config.yaml: 모델/도구 설정 (gitignored)
 - **ThreadDataMiddleware 패치 적용됨**
