@@ -44,7 +44,9 @@ cat skills/custom/발견된스킬/SKILL.md
 - **세무**: compliance_automation, audit_logging
 
 검색: `grep -rl "키워드" skills/custom/*/SKILL.md`
-인덱스: `cat skills/custom/SKILL_INDEX.md`
+**아토믹 치트시트**: `cat skills/custom/ATOMIC_CHEATSHEET.md` (45개 핵심 2줄 요약)
+인덱스: `cat skills/custom/SKILL_INDEX.md` (이름+설명 테이블)
+전체: `cat skills/custom/스킬이름/SKILL.md` (딥 로딩)
 명령어: `cat .claude/commands/INDEX.md`
 에이전트: `cat .claude/agents/INDEX.md`
 
