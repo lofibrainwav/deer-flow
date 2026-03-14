@@ -18,6 +18,22 @@ cat skills/custom/발견된스킬/SKILL.md
 
 **스킬 검색 없이 작업 시작 = 금지.** 45개 왕국 스킬이 `skills/custom/`에 있다.
 
+### 7필라 렌즈 라우팅
+
+작업 성격을 7필라로 판단 → 해당 필라의 스킬+명령어+에이전트를 병렬 장착:
+
+| 필라 | 렌즈 | 핵심 무기 |
+|------|------|-----------|
+| 眞 Truth | 검증/테스트 | tdd-guide + `/verify` |
+| 善 Goodness | 보안/방어 | security-reviewer + `/check` |
+| 美 Beauty | 품질/최적화 | `/simplify` + code-reviewer |
+| 忠 Loyalty | 설계/규격 | architect + `/bmad-*` |
+| 仁 Benevolence | 디버깅/복구 | debug-agent + `/fix` `/loop` |
+| 孝 Filial Piety | 가족/비즈니스 | `/daily` `/batch` + kingdom-orchestrator |
+| 永 Eternity | 학습/기록 | `/learn` `/metacognition` + skill-agent |
+
+상세: `cat skills/custom/PILLAR_ROUTING.md`
+
 ## Rule #1: 지피지기
 
 작업 전 코드 작성 금지. 먼저:
