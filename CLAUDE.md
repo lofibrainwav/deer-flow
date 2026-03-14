@@ -45,6 +45,24 @@ cat skills/custom/발견된스킬/SKILL.md
 
 검색: `grep -rl "키워드" skills/custom/*/SKILL.md`
 
+## CLI 명령어 (33개)
+
+**위치**: `.claude/commands/*.md` — `/명령어`로 실행
+
+| 카테고리 | 명령어 |
+|----------|--------|
+| **개발** | `/dev` `/code` `/fix` `/commit` `/simplify` `/check` `/verify` `/preflight` |
+| **BMAD** | `/bmad-help` `/bmad-bmm-create-prd` `/bmad-bmm-create-architecture` `/bmad-bmm-quick-dev` `/bmad-bmm-quick-spec` `/bmad-bmm-code-review` |
+| **운영** | `/batch` `/loop` `/checkpoint` `/eval` `/learn` `/auto-memory` `/health` `/score` `/daily` |
+| **배포** | `/launch` `/rollback` `/dryrun` `/rc` |
+| **메타** | `/metacognition` `/vibe` |
+
+## 에이전트 (13개)
+
+**위치**: `.claude/agents/*.md`
+
+`architect` `code-reviewer` `debug-agent` `dev-agent` `github-agent` `kingdom-orchestrator` `notebooklm-agent` `obsidian-agent` `planner` `pm-agent` `security-reviewer` `skill-agent` `tdd-guide`
+
 ## 4-System 생태계
 
 | 시스템 | 역할 | 테스트 |
