@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from app.gateway.config import get_gateway_config
+from app.gateway.route_cache import close_redis, get_cache_stats
+from app.gateway.worker_pool import get_pool
 from app.gateway.routers import (
     agents,
     artifacts,
@@ -48,6 +50,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     # 2. Gateway and LangGraph Server are separate processes with independent caches
     # MCP tools are lazily initialized in LangGraph Server when first needed
 
+    # Start LangGraph worker pool
+    pool = get_pool()
+    try:
+        await pool.start()
+        logger.info("LangGraph worker pool started")
+    except Exception:
+        logger.exception("Failed to start worker pool (non-fatal, will retry on first request)")
+
     # Start IM channel service if any channels are configured
     try:
         from app.channels.service import start_channel_service
@@ -58,6 +68,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         logger.exception("No IM channels configured or channel service failed to start")
 
     yield
+
+    # Stop worker pool and cache
+    try:
+        await get_pool().stop()
+    except Exception:
+        logger.exception("Failed to stop worker pool")
+    try:
+        await close_redis()
+    except Exception:
+        logger.exception("Failed to close route cache")
 
     # Stop channel service on shutdown
     try:
@@ -184,6 +204,17 @@ This gateway provides custom endpoints for models, MCP configuration, skills, an
             Service health status information.
         """
         return {"status": "healthy", "service": "deer-flow-gateway"}
+
+    @app.get("/health/pool", tags=["health"])
+    async def pool_health() -> dict:
+        """Worker pool health and stats endpoint."""
+        pool = get_pool()
+        return await pool.health_check()
+
+    @app.get("/health/cache", tags=["health"])
+    async def cache_health() -> dict:
+        """Route cache stats endpoint."""
+        return get_cache_stats()
 
     return app
 

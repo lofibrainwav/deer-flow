@@ -10,6 +10,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
 from app.gateway.path_utils import resolve_thread_virtual_path
+from app.gateway.route_cache import cache_get, cache_set, cache_invalidate
 from deerflow.config.extensions_config import ExtensionsConfig, SkillStateConfig, get_extensions_config, reload_extensions_config
 from deerflow.skills import Skill, load_skills
 from deerflow.skills.loader import get_skills_root_path
@@ -156,40 +157,17 @@ def _skill_to_response(skill: Skill) -> SkillResponse:
     summary="List All Skills",
     description="Retrieve a list of all available skills from both public and custom directories.",
 )
-async def list_skills() -> SkillsListResponse:
-    """List all available skills.
+async def list_skills() -> SkillsListResponse | dict:
+    """List all available skills."""
+    cached = await cache_get("/api/skills")
+    if cached is not None:
+        return cached
 
-    Returns all skills regardless of their enabled status.
-
-    Returns:
-        A list of all skills with their metadata.
-
-    Example Response:
-        ```json
-        {
-            "skills": [
-                {
-                    "name": "PDF Processing",
-                    "description": "Extract and analyze PDF content",
-                    "license": "MIT",
-                    "category": "public",
-                    "enabled": true
-                },
-                {
-                    "name": "Frontend Design",
-                    "description": "Generate frontend designs and components",
-                    "license": null,
-                    "category": "custom",
-                    "enabled": false
-                }
-            ]
-        }
-        ```
-    """
     try:
-        # Load all skills (including disabled ones)
         skills = load_skills(enabled_only=False)
-        return SkillsListResponse(skills=[_skill_to_response(skill) for skill in skills])
+        result = SkillsListResponse(skills=[_skill_to_response(skill) for skill in skills])
+        await cache_set("/api/skills", result.model_dump())
+        return result
     except Exception as e:
         logger.error(f"Failed to load skills: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to load skills: {str(e)}")

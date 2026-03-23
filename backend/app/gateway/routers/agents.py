@@ -8,6 +8,7 @@ import yaml
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 
+from app.gateway.route_cache import cache_get, cache_set, cache_invalidate
 from deerflow.config.agents_config import AgentConfig, list_custom_agents, load_agent_config, load_agent_soul
 from deerflow.config.paths import get_paths
 
@@ -94,15 +95,17 @@ def _agent_config_to_response(agent_cfg: AgentConfig, include_soul: bool = False
     summary="List Custom Agents",
     description="List all custom agents available in the agents directory.",
 )
-async def list_agents() -> AgentsListResponse:
-    """List all custom agents.
+async def list_agents() -> AgentsListResponse | dict:
+    """List all custom agents."""
+    cached = await cache_get("/api/agents")
+    if cached is not None:
+        return cached
 
-    Returns:
-        List of all custom agents with their metadata (without soul content).
-    """
     try:
         agents = list_custom_agents()
-        return AgentsListResponse(agents=[_agent_config_to_response(a) for a in agents])
+        result = AgentsListResponse(agents=[_agent_config_to_response(a) for a in agents])
+        await cache_set("/api/agents", result.model_dump())
+        return result
     except Exception as e:
         logger.error(f"Failed to list agents: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to list agents: {str(e)}")
