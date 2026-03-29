@@ -1,60 +1,41 @@
 #!/usr/bin/env bash
-# deerflow-keepalive.sh — Health-check wrapper for launchd KeepAlive.
-# Called by launchd every 30s. If DeerFlow is down, restarts via start-daemon.sh.
-# If already healthy, exits immediately (cost: ~100ms).
-# COOLDOWN: skip restart if last restart was <60s ago (prevents kill loop).
-
+# deerflow-keepalive.sh — Keep LangGraph alive (direct start, no daemon wrapper)
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LOG="$REPO_ROOT/logs/keepalive.log"
-COOLDOWN_FILE="$REPO_ROOT/logs/.keepalive-last-restart"
-mkdir -p "$REPO_ROOT/logs"
+LOG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs/keepalive.log"
+COOLDOWN_FILE="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/logs/.keepalive-last-restart"
+REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" >> "$LOG"; }
 
-# Quick health check — all 3 core ports must respond
-check_port() {
-  local url="$1"
-  code=$(curl -s -o /dev/null -w "%{http_code}" "$url" --connect-timeout 2 2>/dev/null || echo "000")
-  [ "$code" = "200" ] || [ "$code" = "301" ] || [ "$code" = "302" ]
-}
-healthy=0
-check_port "http://localhost:2024" && ((healthy++))
-check_port "http://localhost:8001/health" && ((healthy++))
-check_port "http://localhost:3000" && ((healthy++))
-
-if [ "$healthy" -ge 3 ]; then
+# Check LangGraph only (core service)
+code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:2024 --connect-timeout 2 2>/dev/null || echo "000")
+if [ "$code" = "200" ]; then
   exit 0
 fi
 
-# Cooldown check — don't restart if we restarted less than 60s ago
+# Cooldown — skip if restarted <90s ago
 if [ -f "$COOLDOWN_FILE" ]; then
   last=$(cat "$COOLDOWN_FILE" 2>/dev/null || echo "0")
-  now=$(date +%s)
-  elapsed=$((now - last))
-  if [ "$elapsed" -lt 60 ]; then
-    exit 0
-  fi
+  elapsed=$(( $(date +%s) - last ))
+  [ "$elapsed" -lt 90 ] && exit 0
 fi
 
-log "WARN: DeerFlow ${healthy}/3 ports healthy — restarting..."
+log "WARN: LangGraph down — starting directly..."
 date +%s > "$COOLDOWN_FILE"
 
-cd "$REPO_ROOT"
-bash scripts/start-daemon.sh >> "$LOG" 2>&1
+# Source .env for API keys
+set -a; source "$REPO/.env" 2>/dev/null; set +a
 
-log "Restart complete — verifying..."
+cd "$REPO/backend"
+find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null
+nohup uv run langgraph dev --port 2024 --no-browser --allow-blocking --no-reload > ../logs/langgraph.log 2>&1 &
 
-sleep 2
-healthy=0
-check_port "http://localhost:2024" && ((healthy++))
-check_port "http://localhost:8001/health" && ((healthy++))
-check_port "http://localhost:3000" && ((healthy++))
-
-if [ "$healthy" -ge 3 ]; then
-  log "OK: DeerFlow restored (${healthy}/3)"
+sleep 8
+code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:2024 --connect-timeout 2 2>/dev/null || echo "000")
+if [ "$code" = "200" ]; then
+  log "OK: LangGraph restored"
 else
-  log "ERROR: DeerFlow still unhealthy after restart (${healthy}/3)"
+  log "ERROR: LangGraph still down after restart"
   exit 1
 fi
