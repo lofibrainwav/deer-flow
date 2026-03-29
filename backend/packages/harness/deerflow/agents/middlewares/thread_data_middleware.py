@@ -71,7 +71,7 @@ class ThreadDataMiddleware(AgentMiddleware[ThreadDataMiddlewareState]):
 
     @override
     def before_agent(self, state: ThreadDataMiddlewareState, runtime: Runtime) -> dict | None:
-        thread_id = runtime.context.get("thread_id")
+        thread_id = (runtime.context or {}).get("thread_id")
         if thread_id is None:
             # Fallback: LangGraph HTTP API puts thread_id in config.configurable
             # but does NOT inject it into runtime.context. Bridge it here once,
@@ -85,7 +85,15 @@ class ThreadDataMiddleware(AgentMiddleware[ThreadDataMiddlewareState]):
         # Global injection: propagate thread_id to runtime.context so every
         # subsequent middleware and tool (sandbox, uploads, memory, etc.)
         # can access it via runtime.context.get("thread_id").
-        runtime.context["thread_id"] = thread_id
+        # Guard: Runtime is a frozen dataclass — context may be None or immutable.
+        # If injection fails, thread_id still flows via state (thread_data).
+        try:
+            if runtime.context is None:
+                pass  # Cannot assign to frozen field — skip injection
+            else:
+                runtime.context["thread_id"] = thread_id
+        except (TypeError, AttributeError):
+            pass  # Frozen dataclass — context injection not possible
 
         if self._lazy_init:
             # Lazy initialization: only compute paths, don't create directories
