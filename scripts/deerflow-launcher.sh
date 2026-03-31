@@ -1,6 +1,7 @@
-#!/usr/bin/env bash
+#!/opt/homebrew/bin/bash
 # deerflow-launcher.sh — Launch all DeerFlow services for launchd supervision
 # launchd manages this script's lifecycle (KeepAlive); this script manages child services.
+# Requires bash 4.3+ for `wait -n` (instant child-exit detection).
 #
 # Services (startup order):
 #   1. LangGraph API  (port 2024) — core agent runtime
@@ -167,13 +168,16 @@ health_check_loop() {
 health_check_loop &
 HEALTH_PID=$!
 
-# ── Process liveness monitor (2s poll, bash 3.2 compatible) ─────────────────
+# ── Process monitor (wait -n: instant child-exit detection, bash 4.3+) ──────
 while true; do
-  for i in "${!SVC_PIDS[@]}"; do
-    if ! kill -0 "${SVC_PIDS[$i]}" 2>/dev/null; then
-      echo "[launcher] ${SVC_NAMES[$i]} (PID ${SVC_PIDS[$i]}) died. Exiting for launchd restart."
-      exit 1
-    fi
-  done
-  sleep 2
+  if ! wait -n "${SVC_PIDS[@]}" 2>/dev/null; then
+    # A child exited — identify which one
+    for i in "${!SVC_PIDS[@]}"; do
+      if ! kill -0 "${SVC_PIDS[$i]}" 2>/dev/null; then
+        echo "[launcher] ${SVC_NAMES[$i]} (PID ${SVC_PIDS[$i]}) died. Exiting for launchd restart."
+        break
+      fi
+    done
+    exit 1
+  fi
 done
