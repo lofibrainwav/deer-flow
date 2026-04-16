@@ -17,17 +17,23 @@ router = APIRouter(prefix="/api/kingdom", tags=["kingdom"])
 # Create a dedicated connection to db0 for reading EROS data.
 
 
+# Module-level Redis connection — reused across requests (avoids per-request connect overhead)
+_eros_redis: redis.Redis | None = None
+
+
 async def _get_eros_redis() -> redis.Redis | None:
-    """Get Redis connection to db0 (where Kingdom EROS data lives)."""
-    try:
-        # Use host.docker.internal on OrbStack/Docker Desktop to reach host Redis
-        redis_url = os.getenv("KINGDOM_REDIS_URL", "redis://host.docker.internal:6380/0")
-        r = redis.from_url(redis_url, decode_responses=False)
-        await r.ping()
-        return r
-    except Exception as e:
-        logger.warning("Could not connect to Kingdom Redis (db0): %s", e)
-        return None
+    """Get (or create) Redis connection to db0 — singleton, not per-request."""
+    global _eros_redis
+    if _eros_redis is None:
+        try:
+            redis_url = os.getenv("KINGDOM_REDIS_URL", "redis://host.docker.internal:6380/0")
+            _eros_redis = redis.from_url(redis_url, decode_responses=False)
+            await _eros_redis.ping()
+            logger.info("EROS Redis connected: %s", redis_url)
+        except Exception as e:
+            logger.warning("Could not connect to Kingdom Redis (db0): %s", e)
+            return None
+    return _eros_redis
 
 
 @router.get("/eros", summary="Get EROS Score", description="Read EROS score (6 pillars + s_score) from Kingdom Redis.")
