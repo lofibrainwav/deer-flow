@@ -77,6 +77,11 @@ services:
       - DEER_FLOW_HOST_BASE_DIR=${DEER_FLOW_HOME}
       - DEER_FLOW_HOST_SKILLS_PATH=${DEER_FLOW_REPO_ROOT}/skills
       - DEER_FLOW_SANDBOX_HOST=host.docker.internal
+      # Redis route cache — host.docker.internal(:6380) resolves to Docker host
+      - ROUTE_CACHE_REDIS_URL=redis://host.docker.internal:6380/3
+      # Container-side path (volume maps host config.yaml here)
+      - DEER_FLOW_CONFIG_PATH=/app/backend/config.yaml
+      - DEER_FLOW_EXTENSIONS_CONFIG_PATH=/app/backend/extensions_config.json
     env_file:
       - ../.env
     extra_hosts:
