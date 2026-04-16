@@ -38,15 +38,18 @@ services:
       - deer-flow
     restart: unless-stopped
 
-  # ── Frontend: Next.js Production ───────────────────────────────────────────
+  # ── Frontend: Next.js Development ──────────────────────────────────────────
+  # NOTE: prod target requires build (pnpm build) which needs ~4GB free RAM.
+  # Using dev target (install only) when build fails due to OOM.
   frontend:
     build:
       context: ../
       dockerfile: frontend/Dockerfile
-      target: prod
+      target: dev
       args:
         PNPM_STORE_PATH: ${PNPM_STORE_PATH:-/root/.local/share/pnpm/store}
     container_name: deer-flow-frontend
+    command: sh -c "cd /app/frontend && pnpm dev"
     environment:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
     env_file:
