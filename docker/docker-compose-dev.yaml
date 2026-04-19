@@ -102,6 +102,8 @@ services:
     networks:
       - deer-flow-dev
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
 
   # Backend - Gateway API
   gateway:
@@ -130,6 +132,10 @@ services:
       - DEER_FLOW_HOST_BASE_DIR=${DEER_FLOW_ROOT}/backend/.deer-flow
       - DEER_FLOW_HOST_SKILLS_PATH=${DEER_FLOW_ROOT}/skills
       - DEER_FLOW_SANDBOX_HOST=host.docker.internal
+      - LANGGRAPH_URL=http://langgraph:2024
+      # Container-side paths (volume mounts above) — override host paths from .env
+      - DEER_FLOW_CONFIG_PATH=/app/config.yaml
+      - DEER_FLOW_EXTENSIONS_CONFIG_PATH=/app/extensions_config.json
     env_file:
       - ../.env
     extra_hosts:
@@ -166,6 +172,9 @@ services:
       - DEER_FLOW_HOST_BASE_DIR=${DEER_FLOW_ROOT}/backend/.deer-flow
       - DEER_FLOW_HOST_SKILLS_PATH=${DEER_FLOW_ROOT}/skills
       - DEER_FLOW_SANDBOX_HOST=host.docker.internal
+      # Container-side paths (volume mounts above) — override host paths from .env
+      - DEER_FLOW_CONFIG_PATH=/app/config.yaml
+      - DEER_FLOW_EXTENSIONS_CONFIG_PATH=/app/extensions_config.json
     env_file:
       - ../.env
     extra_hosts:
