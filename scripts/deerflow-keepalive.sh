@@ -29,7 +29,7 @@ set -a; source "$REPO/.env" 2>/dev/null; set +a
 
 cd "$REPO/backend"
 find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null
-nohup uv run langgraph dev --port 2024 --no-browser --allow-blocking --no-reload > ../logs/langgraph.log 2>&1 &
+nohup uv run langgraph dev --port 2024 --no-browser --no-reload > ../logs/langgraph.log 2>&1 &
 
 sleep 8
 code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:2024 --connect-timeout 2 2>/dev/null || echo "000")

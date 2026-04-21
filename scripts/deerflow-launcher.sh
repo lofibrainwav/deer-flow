@@ -13,6 +13,8 @@
 # If any child dies or health check fails, script exits for launchd restart.
 set -euo pipefail
 
+export PATH="/Users/brnestrm/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:$PATH"
+
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOGDIR="$REPO/logs"
 mkdir -p "$LOGDIR"
@@ -41,6 +43,7 @@ kill_port() {
     for p in $pids; do
       kill -0 "$p" 2>/dev/null && kill -9 "$p" 2>/dev/null || true
     done
+    sleep 3  # ensure OS releases port fully (EADDRINUSE prevention)
   fi
 }
 
@@ -108,16 +111,16 @@ wait_for_port() {
 cd "$REPO/backend"
 find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
-uv run langgraph dev --port 2024 --no-browser --allow-blocking --no-reload \
+uv run langgraph dev --port 2024 --no-browser --no-reload \
   >"$LOGDIR/langgraph.log" 2>&1 &
 SVC_PIDS+=($!)
-wait_for_port 2024 60 "LangGraph" || exit 1
+wait_for_port 2024 120 "LangGraph" || exit 1
 
 # ── Start Gateway ───────────────────────────────────────────────────────────
 PYTHONPATH=. uv run uvicorn app.gateway.app:app --host 0.0.0.0 --port 8001 \
   >"$LOGDIR/gateway.log" 2>&1 &
 SVC_PIDS+=($!)
-wait_for_port 8001 30 "Gateway" || exit 1
+wait_for_port 8001 60 "Gateway" || exit 1
 
 # ── Start Frontend ──────────────────────────────────────────────────────────
 cd "$REPO/frontend"
