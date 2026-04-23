@@ -26,7 +26,7 @@ async def _get_eros_redis() -> redis.Redis | None:
     global _eros_redis
     if _eros_redis is None:
         try:
-            redis_url = os.getenv("KINGDOM_REDIS_URL", "redis://host.docker.internal:6380/0")
+            redis_url = os.getenv("KINGDOM_REDIS_URL", "redis://127.0.0.1:6380/0")
             _eros_redis = redis.from_url(redis_url, decode_responses=False)
             await _eros_redis.ping()
             logger.info("EROS Redis connected: %s", redis_url)
@@ -132,9 +132,11 @@ def _read_mem_percent() -> float:
 async def _ping_latency_ms() -> float:
     """Measure round-trip to Docker gateway itself as a latency proxy."""
     try:
+        from app.gateway.config import get_gateway_config
+        cfg = get_gateway_config()
         start = time.monotonic()
         reader, writer = await asyncio.wait_for(
-            asyncio.open_connection("127.0.0.1", 8001),
+            asyncio.open_connection(cfg.host, cfg.port),
             timeout=1.0,
         )
         writer.close()
