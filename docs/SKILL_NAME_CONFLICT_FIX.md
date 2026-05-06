@@ -2,46 +2,46 @@
 
 ## 概述
 
-本文档详细记录了修复 public skill 和 custom skill 同名冲突问题的所有代码改动。
+本文档详细记录了修复 public skill 和 custom skill 同名冲突问题적所有代码改动。
 
 **状态**: ⚠️ **已知问题保留** - 同名技能冲突问题已识别但暂时保留，后续版本修复
 
-**日期**: 2026-02-10
+**日기**: 2026-02-10
 
 ---
 
 ## 问题描述
 
-### 原始问题
+### 원始问题
 
 当 public skill 和 custom skill 有相同名称（但技能文件内容不同）时，会出现以下问题：
 
-1. **打开冲突**: 打开 public skill 时，同名的 custom skill 也会被打开
-2. **关闭冲突**: 关闭 public skill 时，同名的 custom skill 也会被关闭
+1. **打开冲突**: 打开 public skill 时，同名적 custom skill 也会被打开
+2. **关闭冲突**: 关闭 public skill 时，同名적 custom skill 也会被关闭
 3. **配置冲突**: 两个技能共享同一个配置键，导致状态互相影响
 
-### 根本原因
+### 根本원因
 
 - 配置文件中技能状态仅使用 `skill_name` 作为键
-- 同名但不同类别的技能无法区分
-- 缺少类别级别的重复检查
+- 同名但不同类别적技能无法区分
+- 缺少类别级别적重复检查
 
 ---
 
 ## 解决方案
 
-### 核心思路
+### 핵심心思路
 
-1. **组合键存储**: 使用 `{category}:{name}` 格式作为配置键，确保唯一性
-2. **向后兼容**: 保持对旧格式（仅 `name`）的支持
-3. **重复检查**: 在加载时检查每个类别内是否有重复的技能名称
-4. **API 增强**: API 支持可选的 `category` 查询参数来区分同名技能
+1. **组合键존储**: 使用 `{category}:{name}` 格式作为配置键，확保唯一성
+2. **向后겸容**: 保持대응旧格式（仅 `name`）적支持
+3. **重复检查**: 在가载时检查每个类别内是否有重复적技能名称
+4. **API 增强**: API 支持가选적 `category` 查询参数来区分同名技能
 
-### 设计原则
+### 设计원则
 
-- ✅ 最小改动原则
-- ✅ 向后兼容
-- ✅ 清晰的错误提示
+- ✅ 最小改动원则
+- ✅ 向后겸容
+- ✅ 清晰적错误提示
 - ✅ 代码复用（提取公共函数）
 
 ---
@@ -126,21 +126,21 @@ def is_skill_enabled(self, skill_name: str, skill_category: str) -> bool:
     return skill_category in ("public", "custom")
 ```
 
-**改动说明**:
+**改动说명**:
 - 优先检查新格式键 `{category}:{name}`
-- 向后兼容：如果新格式不存在，检查旧格式（仅 public 类别）
+- 向后겸容：如果新格式不존在，检查旧格式（仅 public 类别）
 - 保持默认行为：未配置时默认启用
 
 **影响**:
-- ✅ 向后兼容：旧配置仍可正常工作
+- ✅ 向后겸容：旧配置仍가正常工作
 - ✅ 新配置使用组合键，避免冲突
 - ✅ 不影响现有调用方
 
 ---
 
-### 二、后端技能加载器 (`backend/packages/harness/deerflow/skills/loader.py`)
+### 二、后端技能가载器 (`backend/packages/harness/deerflow/skills/loader.py`)
 
-#### 2.1 添加重复检查逻辑
+#### 2.1 添가重复检查逻辑
 
 **位置**: 第 54-86 行
 
@@ -188,15 +188,15 @@ for category in ["public", "custom"]:
             skills.append(skill)
 ```
 
-**改动说明**:
+**改动说명**:
 - 为每个类别维护技能名称字典
 - 检测到重复时抛出 `ValueError`，包含详细路径信息
-- 确保每个类别内技能名称唯一
+- 확保每个类别内技能名称唯一
 
 **影响**:
 - ✅ 防止配置冲突
-- ✅ 清晰的错误提示
-- ⚠️ 如果存在重复，加载会失败（这是预期行为）
+- ✅ 清晰적错误提示
+- ⚠️ 如果존在重复，가载会失败（这是预기行为）
 
 ---
 
@@ -250,12 +250,12 @@ def _find_skill_by_name(
 
 **作用**: 
 - 统一技能查找逻辑
-- 支持可选的 category 过滤
+- 支持가选적 category 过滤
 - 自动检测同名冲突并提示
 
 **影响**:
 - ✅ 减少代码重复（约 30 行）
-- ✅ 统一错误处理逻辑
+- ✅ 统一错误处리逻辑
 
 ---
 
@@ -299,13 +299,13 @@ async def get_skill(skill_name: str, category: str | None = None) -> SkillRespon
         raise HTTPException(status_code=500, detail=f"Failed to get skill: {str(e)}")
 ```
 
-**改动说明**:
-- 添加可选的 `category` 查询参数
+**改动说명**:
+- 添가가选적 `category` 查询参数
 - 使用 `_find_skill_by_name()` 统一查找逻辑
-- 添加 `ValueError` 处理（重复检查错误）
+- 添가 `ValueError` 处리（重复检查错误）
 
 **API 变更**:
-- ✅ 向后兼容：`category` 参数可选
+- ✅ 向后겸容：`category` 参数가选
 - ✅ 如果只有一个同名技能，自动匹配
 - ✅ 如果有多个同名技能，要求提供 `category`
 
@@ -325,7 +325,7 @@ async def update_skill(skill_name: str, request: SkillUpdateRequest) -> SkillRes
         raise HTTPException(status_code=404, detail=f"Skill '{skill_name}' not found")
     
     extensions_config.skills[skill_name] = SkillStateConfig(enabled=request.enabled)
-    # ... 保存配置 ...
+    # ... 保존配置 ...
 ```
 
 **修改后**:
@@ -345,7 +345,7 @@ async def update_skill(skill_name: str, request: SkillUpdateRequest, category: s
 
         # Get or create config path
         config_path = ExtensionsConfig.resolve_config_path()
-        # ... 配置路径处理 ...
+        # ... 配置路径处리 ...
 
         # Load current configuration
         extensions_config = get_extensions_config()
@@ -391,15 +391,15 @@ async def update_skill(skill_name: str, request: SkillUpdateRequest, category: s
         raise HTTPException(status_code=500, detail=f"Failed to update skill: {str(e)}")
 ```
 
-**改动说明**:
-- 添加可选的 `category` 查询参数
+**改动说명**:
+- 添가가选적 `category` 查询参数
 - 使用 `_find_skill_by_name()` 查找技能
-- **关键改动**: 使用组合键 `ExtensionsConfig.get_skill_key()` 存储配置
-- 添加 `ValueError` 处理
+- **关键改动**: 使用组合键 `ExtensionsConfig.get_skill_key()` 존储配置
+- 添가 `ValueError` 处리
 
 **API 变更**:
-- ✅ 向后兼容：`category` 参数可选
-- ✅ 配置存储使用新格式键
+- ✅ 向后겸容：`category` 参数가选
+- ✅ 配置존储使用新格式键
 
 ---
 
@@ -446,14 +446,14 @@ except ValueError as e:
     )
 ```
 
-**改动说明**:
-- 检查目录是否存在（原有逻辑）
+**改动说명**:
+- 检查目录是否존在（원有逻辑）
 - **新增**: 检查 custom 类别中是否已有同名技能（即使目录名不同）
-- 添加 `ValueError` 处理
+- 添가 `ValueError` 处리
 
 **影响**:
 - ✅ 防止安装同名技能
-- ✅ 清晰的错误提示
+- ✅ 清晰적错误提示
 
 ---
 
@@ -506,14 +506,14 @@ export async function enableSkill(
 }
 ```
 
-**改动说明**:
-- 添加 `category` 参数
+**改动说명**:
+- 添가 `category` 参数
 - URL 编码 skillName 和 category
 - 将 category 作为查询参数传递
 
 **影响**:
 - ✅ 必须传递 category（前端已有该信息）
-- ✅ URL 编码确保特殊字符正确处理
+- ✅ URL 编码확保特殊字符正확处리
 
 ---
 
@@ -567,12 +567,12 @@ export function useEnableSkill() {
 }
 ```
 
-**改动说明**:
-- 添加 `category` 参数到类型定义
+**改动说명**:
+- 添가 `category` 参数到类型定义
 - 传递 `category` 给 `enableSkill()` API 调用
 
 **影响**:
-- ✅ 类型安全
+- ✅ 类型安전
 - ✅ 必须传递 category
 
 ---
@@ -623,19 +623,19 @@ export function useEnableSkill() {
   ))}
 ```
 
-**改动说明**:
+**改动说명**:
 - **关键改动**: React key 从 `skill.name` 改为 `${skill.category}:${skill.name}`
 - 传递 `category` 给 `enableSkill()`
 
 **影响**:
-- ✅ 确保 React key 唯一性（避免同名技能冲突）
-- ✅ 正确传递 category 信息
+- ✅ 확保 React key 唯一성（避免同名技能冲突）
+- ✅ 正확传递 category 信息
 
 ---
 
 ## 配置格式变更
 
-### 旧格式（向后兼容）
+### 旧格式（向后겸容）
 
 ```json
 {
@@ -662,9 +662,9 @@ export function useEnableSkill() {
 }
 ```
 
-### 迁移说明
+### 迁移说명
 
-- ✅ **自动兼容**: 系统会自动识别旧格式
+- ✅ **自动겸容**: 系统会自动识别旧格式
 - ✅ **无需手动迁移**: 旧配置继续工作
 - ✅ **新配置使用新格式**: 更新技能状态时自动使用新格式键
 
@@ -675,15 +675,15 @@ export function useEnableSkill() {
 ### GET /api/skills/{skill_name}
 
 **新增查询参数**:
-- `category` (可选): `public` 或 `custom`
+- `category` (가选): `public` 或 `custom`
 
 **行为变更**:
-- 如果只有一个同名技能，自动匹配（向后兼容）
+- 如果只有一个同名技能，自动匹配（向后겸容）
 - 如果有多个同名技能，必须提供 `category` 参数
 
 **示例**:
 ```bash
-# 单个技能（向后兼容）
+# 单个技能（向后겸容）
 GET /api/skills/my-skill
 
 # 多个同名技能（必须指定类别）
@@ -694,11 +694,11 @@ GET /api/skills/my-skill?category=custom
 ### PUT /api/skills/{skill_name}
 
 **新增查询参数**:
-- `category` (可选): `public` 或 `custom`
+- `category` (가选): `public` 或 `custom`
 
 **行为变更**:
-- 配置存储使用新格式键 `{category}:{name}`
-- 如果只有一个同名技能，自动匹配（向后兼容）
+- 配置존储使用新格式键 `{category}:{name}`
+- 如果只有一个同名技能，自动匹配（向后겸容）
 - 如果有多个同名技能，必须提供 `category` 参数
 
 **示例**:
@@ -718,10 +718,10 @@ Body: { "enabled": false }
 
 ### 后端
 
-1. **配置读取**: `ExtensionsConfig.is_skill_enabled()` - 支持新格式，向后兼容
+1. **配置读取**: `ExtensionsConfig.is_skill_enabled()` - 支持新格式，向后겸容
 2. **配置写入**: `PUT /api/skills/{skill_name}` - 使用新格式键
-3. **技能加载**: `load_skills()` - 添加重复检查
-4. **API 端点**: 3 个端点支持可选的 `category` 参数
+3. **技能가载**: `load_skills()` - 添가重复检查
+4. **API 端点**: 3 个端点支持가选적 `category` 参数
 
 ### 前端
 
@@ -732,26 +732,26 @@ Body: { "enabled": false }
 ### 配置文件
 
 - **格式变更**: 新配置使用 `{category}:{name}` 格式
-- **向后兼容**: 旧格式继续支持
+- **向后겸容**: 旧格式继续支持
 - **自动迁移**: 更新时自动使用新格式
 
 ---
 
 ## 测试建议
 
-### 1. 向后兼容性测试
+### 1. 向后겸容성测试
 
 - [ ] 旧格式配置文件应正常工作
-- [ ] 仅使用 `skill_name` 的 API 调用应正常工作（单个技能时）
+- [ ] 仅使用 `skill_name` 적 API 调用应正常工作（单个技能时）
 - [ ] 现有技能状态应保持不变
 
 ### 2. 新功能测试
 
-- [ ] public 和 custom 同名技能应能独立控制
+- [ ] public 和 custom 同名技能应能独立控제
 - [ ] 打开/关闭一个技能不应影响另一个同名技能
-- [ ] API 调用传递 `category` 参数应正确工作
+- [ ] API 调用传递 `category` 参数应正확工作
 
-### 3. 错误处理测试
+### 3. 错误处리测试
 
 - [ ] public 类别内重复技能名称应报错
 - [ ] custom 类别内重复技能名称应报错
@@ -760,7 +760,7 @@ Body: { "enabled": false }
 ### 4. 安装测试
 
 - [ ] 安装同名技能应被拒绝（409 错误）
-- [ ] 错误信息应包含现有技能的位置
+- [ ] 错误信息应包含现有技能적位置
 
 ---
 
@@ -771,19 +771,19 @@ Body: { "enabled": false }
 **当前状态**: 同名技能冲突问题已识别但**暂时保留**，后续版本修复
 
 **问题表现**:
-- 如果 public 和 custom 目录下存在同名技能，虽然配置已使用组合键区分，但前端 UI 可能仍会出现混淆
-- 用户可能无法清楚区分哪个是 public，哪个是 custom
+- 如果 public 和 custom 目录下존在同名技能，虽然配置已使用组合键区分，但前端 UI 가能仍会出现混淆
+- 用户가能无法清楚区分哪个是 public，哪个是 custom
 
 **影响范围**:
-- 用户体验：可能无法清楚区分同名技能
-- 功能：技能状态可以独立控制（已修复）
-- 数据：配置正确存储（已修复）
+- 用户体验：가能无法清楚区分同名技能
+- 功能：技能状态가以独立控제（已修复）
+- 数据：配置正확존储（已修复）
 
 ### 后续修复建议
 
-1. **UI 增强**: 在技能列表中明确显示类别标识
+1. **UI 增强**: 在技能列表中명확显示类别标识
 2. **名称验证**: 安装时检查是否与 public 技能同名，并给出警告
-3. **文档更新**: 说明同名技能的最佳实践
+3. **文档更新**: 说명同名技能적最佳实践
 
 ---
 
@@ -801,7 +801,7 @@ Body: { "enabled": false }
 
 2. **恢复 API 端点**:
    - 移除 `category` 参数
-   - 恢复原有的查找逻辑
+   - 恢复원有적查找逻辑
 
 3. **移除重复检查**:
    - 移除 `category_skill_names` 跟踪逻辑
@@ -842,21 +842,21 @@ Body: { "enabled": false }
 - **代码行数**: 
   - 新增: ~80 行
   - 修改: ~30 行
-  - 删除: ~0 行（向后兼容）
+  - 删除: ~0 行（向后겸容）
 
-### 核心改进
+### 핵심心改进
 
-1. ✅ **配置唯一性**: 使用组合键确保配置唯一
-2. ✅ **向后兼容**: 旧配置继续工作
+1. ✅ **配置唯一성**: 使用组合键확保配置唯一
+2. ✅ **向后겸容**: 旧配置继续工作
 3. ✅ **重复检查**: 防止配置冲突
 4. ✅ **代码复用**: 提取公共函数减少重复
-5. ✅ **错误提示**: 清晰的错误信息
+5. ✅ **错误提示**: 清晰적错误信息
 
-### 注意事项
+### 주意사项
 
-- ⚠️ **已知问题保留**: UI 区分同名技能的问题待后续修复
-- ✅ **向后兼容**: 现有配置和 API 调用继续工作
-- ✅ **最小改动**: 仅修改必要的代码
+- ⚠️ **已知问题保留**: UI 区分同名技能적问题待后续修复
+- ✅ **向后겸容**: 现有配置和 API 调用继续工作
+- ✅ **最小改动**: 仅修改必要적代码
 
 ---
 

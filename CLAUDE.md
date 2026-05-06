@@ -27,7 +27,7 @@ cat skills/custom/발견된스킬/SKILL.md
 # Step 3. 없으면 → 작업 후 새 스킬 생성 검토
 ```
 
-**스킬 검색 없이 작업 시작 = 금지.** 242개 통합 스킬이 `skills/custom/`에 있다 (왕국 52 + kiro 흡수 159 + 기타).
+**스킬 검색 없이 작업 시작 = 금지.** 실측: `find skills -name SKILL.md | wc -l` (custom은 gitignored — 머신마다 다름. 2026-04-23 실측: public 17 + custom 373 = 390개).
 
 ### 7필라 렌즈 라우팅
 
@@ -35,13 +35,13 @@ cat skills/custom/발견된스킬/SKILL.md
 
 | 필라 | 렌즈 | 핵심 무기 |
 |------|------|-----------|
-| 眞 Truth | 검증/테스트 | tdd-guide + `/verify` |
-| 善 Goodness | 보안/방어 | security-reviewer + `/check` |
-| 美 Beauty | 품질/최적화 | `/simplify` + code-reviewer |
+| 참 Truth | 검증/테스트 | tdd-guide + `/verify` |
+| 선 Goodness | 보안/방어 | security-reviewer + `/check` |
+| 아름답다 Beauty | 품질/최적화 | `/simplify` + code-reviewer |
 | 忠 Loyalty | 설계/규격 | architect + `/bmad-*` |
-| 仁 Benevolence | 디버깅/복구 | debug-agent + `/fix` `/loop` |
-| 孝 Filial Piety | 가족/비즈니스 | `/daily` `/batch` + kingdom-orchestrator |
-| 永 Eternity | 학습/기록 | `/learn` `/metacognition` + skill-agent |
+| 어질 Benevolence | 디버깅/복구 | debug-agent + `/fix` `/loop` |
+| 효 Filial Piety | 가족/비즈니스 | `/daily` `/batch` + kingdom-orchestrator |
+| 영원 Eternity | 학습/기록 | `/learn` `/metacognition` + skill-agent |
 
 상세: `cat skills/custom/PILLAR_ROUTING.md`
 
@@ -58,9 +58,9 @@ cat skills/custom/발견된스킬/SKILL.md
 - 사령관만 기다리지 말고 **메타인지로 자율 진격**
 - 오판 시 즉시 "제가 잘못 읽었습니다" 정정 — 변명 금지
 
-## 왕국 스킬 라이브러리 (219개)
+## 왕국 스킬 라이브러리
 
-**위치**: `skills/custom/*/SKILL.md`
+**위치**: `skills/custom/*/SKILL.md` (gitignored, 머신별 다름. 실측 명령: `find skills/custom -name SKILL.md | wc -l`)
 
 주요 도메인:
 - **에이전트**: metacognitive-orchestration, subagent-driven-development, agent-orchestration
@@ -115,8 +115,8 @@ cat skills/custom/발견된스킬/SKILL.md
 ## deer-flow 구조
 
 - backend/: Python LangGraph (port 2024 + Gateway 8001)
-- skills/custom/: 46개 왕국 공유 스킬 (노이즈 18개 제거) (gitignored)
-- skills/public/: 17개 공개 스킬
+- skills/custom/: 왕국 공유 스킬 (gitignored, 머신별 다름. `find skills/custom -name SKILL.md | wc -l`로 실측)
+- skills/public/: 공개 스킬 (`find skills/public -name SKILL.md | wc -l`로 실측)
 - config.yaml: 모델/도구 설정 (gitignored)
 - **ThreadDataMiddleware 패치 적용됨**
 
