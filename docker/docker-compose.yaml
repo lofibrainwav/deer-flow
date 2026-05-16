@@ -50,6 +50,10 @@ services:
         PNPM_STORE_PATH: ${PNPM_STORE_PATH:-/root/.local/share/pnpm/store}
     container_name: deer-flow-frontend
     command: sh -c "cd /app/frontend && pnpm dev"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     environment:
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
     env_file:
@@ -102,6 +106,10 @@ services:
       dockerfile: backend/Dockerfile
     container_name: deer-flow-langgraph
     command: sh -c "cd /app/backend && uv run langgraph dev --no-browser --allow-blocking --no-reload --host 0.0.0.0 --port 2024"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
     volumes:
       - ${DEER_FLOW_CONFIG_PATH}:/app/config.yaml:ro
       - ${DEER_FLOW_EXTENSIONS_CONFIG_PATH}:/app/extensions_config.json:ro
